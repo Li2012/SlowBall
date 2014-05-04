@@ -13,7 +13,7 @@ Config::Config() {
       std::string key;
       fin_cfg >> key;
       if (key == "image") {
-        fin_cfg >> uc.image;
+        fin_cfg >> uc.unit_image;
       }
       if (key == "name") {
         fin_cfg >> uc.unit_name;
@@ -22,6 +22,6 @@ Config::Config() {
         fin_cfg >> uc.unit_id;
       }
     }
-    unit_config_map[uc.unit_id] = uc;
+    unit_config_map_[uc.unit_id] = uc;
   }
 }

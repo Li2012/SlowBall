@@ -2,6 +2,7 @@
 #define GAME_H_
 
 #include "config.h"
+#include "map.h"
 
 #include <SDL2/SDL.h>
 
@@ -11,6 +12,7 @@ public:
   ~Game();
   int RunGame();
   void RenderUnit(unit_config uc);
+  void RenderMap(const Map& m);
 private:
   SDL_Window* window_;
   SDL_Renderer* renderer_;
@@ -18,7 +20,5 @@ private:
 
   Config config;
 };
-
-
 
 #endif /* GAME_H_ */
