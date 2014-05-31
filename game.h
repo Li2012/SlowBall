@@ -6,6 +6,9 @@
 
 #include <SDL2/SDL.h>
 
+const int kWindowWidth = 800;
+const int kWindowHeight = 600;
+
 class Game {
 public:
   Game();
@@ -18,7 +21,7 @@ private:
   SDL_Renderer* renderer_;
   SDL_Texture* texture_;
 
-  Config config;
+  Config config_;
 };
 
 #endif /* GAME_H_ */

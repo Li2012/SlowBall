@@ -7,6 +7,7 @@
 int main() {
   Game g;
   Map m(15, 10);
+  g.RenderMap(m);
   g.RunGame();
   return 0;
 }

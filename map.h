@@ -25,6 +25,8 @@ struct Tile {
 class Map {
 public:
   Map(int width, int height);
+
+  Tile GetTile(Location location) const;
   int get_w() const {return w_;}
   void set_w(int width) {w_ = width;}
   int get_h() const {return h_;}
