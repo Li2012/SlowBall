@@ -1,0 +1,2 @@
+Now add some basic tests frameworks. Using gtest. 
+Add skeleton makefile to build the target and tests.

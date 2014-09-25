@@ -1,13 +1,17 @@
 #include "map.h"
 
 
-Location Location::GetLocation(Direction direction) {
+Location Location::GetLocation(const Direction& direction) {
+  if (x == -1 or y == -1) {
+    return Location(-1, -1);
+  }
+
   switch (direction) {
   case EAST:
     return Location(x + 1, y);
   case SOUTH_EAST:
     if (y % 2 == 0) {
-      return Location(x - 1, y + 1);
+      return Location(x + 1, y + 1);
     }
     return Location(x, y + 1);
   case SOUTH_WEST:
@@ -30,6 +34,10 @@ Location Location::GetLocation(Direction direction) {
   default:
     return Location(-1, -1);
   }
+}
+
+std::ostream& operator<<(std::ostream& stream, const Location& l) {
+  return stream << "(" << l.x << "," << l.y << ")";
 }
 
 Map::Map(int width, int height): w_(width), h_(height) {
