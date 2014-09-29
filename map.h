@@ -3,27 +3,29 @@
 
 #include <vector>
 #include <iostream>
+#include <sstream>
+#include <string>
 
 //Zero indexed hex map.
 // (0,0) is always at the north east of (0,1).
-//         /\    /\    /\     |    
-//        /  \  /  \  /  \    |     
-//       /    \/    \/    \   |  
-//       |0,0  |1,0 | 2,0 |   |  
-//       |     |    |     |   |  
-//      /\    /\    /\    /   |  
-//     /  \  /  \  /  \  /    | 
+//         /\    /\    /\     |
+//        /  \  /  \  /  \    |
+//       /    \/    \/    \   |
+//       |0,0  |1,0 | 2,0 |   |
+//       |     |    |     |   |
+//      /\    /\    /\    /   |
+//     /  \  /  \  /  \  /    |
 //    /    \/    \/    \/     |
-//    |0,1  |1,1 | 2,1  |     |     
-//    |     |    |      |     |     
+//    |0,1  |1,1 | 2,1  |     |
+//    |     |    |      |     |
 //    \    /\    /\    /\     |
-//     \  /  \  /  \  /  \    | 
-//      \/    \/    \/    \   |  
-//       |0,2  |1,2 | 2,2 |   |  
-//       |     |    |     |   |  
-//       \    /\    /\    /   |  
-//        \  /  \  /  \  /    |  
-//         \/    \/    \/     | 
+//     \  /  \  /  \  /  \    |
+//      \/    \/    \/    \   |
+//       |0,2  |1,2 | 2,2 |   |
+//       |     |    |     |   |
+//       \    /\    /\    /   |
+//        \  /  \  /  \  /    |
+//         \/    \/    \/     |
 
 
 enum Direction {
@@ -31,9 +33,14 @@ enum Direction {
 };
 
 struct Location {
+  Location() {
+    x = -1;
+    y = -1;
+  }
+
   Location(int x, int y) {
     if (x < 0 || y < 0) {
-      this->x = -1; 
+      this->x = -1;
       this->y = -1;
       return;
     }
@@ -42,20 +49,28 @@ struct Location {
 
   Location GetLocation(const Direction& d);
 
+  std::string DebugString() const;
+
   int x;
   int y;
 
 };
 
 
-std::ostream& operator<<(std::ostream& stream, const Location& l);
+std::ostream& operator<< (std::ostream& stream, const Location& l);
 
-inline bool operator==(const Location& lhs, const Location& rhs) { 
+inline bool operator== (const Location& lhs, const Location& rhs) {
   return lhs.x == rhs.x && lhs.y == rhs.y;
 }
 
-inline bool operator!=(const Location& lhs, const Location& rhs) { 
+inline bool operator!= (const Location& lhs, const Location& rhs) {
   return !(lhs == rhs);
+}
+
+inline bool operator< (const Location& lhs, const Location& rhs) {
+  if (lhs.x < rhs.x) return true;
+  if (lhs.x > rhs.x) return false;
+  return lhs.y < rhs.y;
 }
 
 struct Tile {
@@ -72,11 +87,16 @@ class Map {
   int get_h() const {return h_;}
   void set_h(int height) {h_ = height;}
 
+  bool IsValidLocation(const Location& location) const;
+
+  std::string DebugString(int spaces = 0) const;
+
 
  private:
   int w_;
   int h_;
   std::vector<std::vector<Tile> > tiles_;
 };
+
 
 #endif

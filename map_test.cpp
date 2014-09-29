@@ -25,6 +25,8 @@ TEST(LocationTest, OK) {
   EXPECT_NE(l1, l1e);
   EXPECT_NE(l1, l1w);
 
+  EXPECT_EQ(l1.DebugString(), "(1,1)");
+
   Location l2(1, 0);
   Location l2e(2, 0);
   Location l2w(0, 0);
@@ -48,8 +50,6 @@ TEST(LocationTest, OK) {
   EXPECT_NE(l2, l2w);
 
 }
-
-
 
 TEST(LocationTest, InvalideLocation) {
   Location l1(-1, -1);
