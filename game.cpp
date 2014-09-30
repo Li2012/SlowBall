@@ -1,13 +1,19 @@
 #include "game.h"
 
+#include <iostream>
 #include <SDL2/SDL_image.h>
 
-Game::Game() {
-  window_ = SDL_CreateWindow("SlowBall",100, 100, kWindowWidth, kWindowHeight, SDL_WINDOW_OPENGL);
+Game::Game() : map_(0, 0) {
+  window_ = SDL_CreateWindow("SlowBall", 100, 100, kWindowWidth, kWindowHeight, SDL_WINDOW_OPENGL);
   renderer_ = SDL_CreateRenderer(window_, -1, SDL_RENDERER_ACCELERATED);
   SDL_SetRenderDrawColor(renderer_, 0xff, 0xff, 0xff, 0xff);
   SDL_RenderClear(renderer_);
   SDL_RenderPresent(renderer_);
+
+  x_offset_ = 0;
+  y_offset_ = 0;
+  scrolling_sensitivity_ = 5;
+  scrolling_margin_ = 15;
   //RenderUnit(config_.get_unit_config(1));
 }
 
@@ -19,21 +25,64 @@ Game::~Game() {
 int Game::RunGame() {
   bool done = false;
   SDL_Event event;
+  int prev_tick = SDL_GetTicks();
+  int current_tick = SDL_GetTicks();
+  mouse_x_ = 0;
+  mouse_y_ = 0;
+
+  RenderMap();
   while (!done) {
     while (SDL_PollEvent(&event)) {
-      switch (event.type) {
-      case SDL_QUIT:
+      if (event.type == SDL_QUIT ) {
+        std::cout << "quit event" << std::endl;
         done = true;
-        break;
-      default:
-        break;
+      }
+
+      else if (event.type == SDL_MOUSEMOTION) {
+        SDL_MouseMotionEvent mouse_motion_event = event.motion;
+        mouse_x_ = mouse_motion_event.x;
+        mouse_y_ = mouse_motion_event.y;
+      }
+
+      else if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
+        SDL_KeyboardEvent keyboard_event = event.key;
+        SDL_Keysym key_symbol = keyboard_event.keysym;
+
+        // can call SDL_GetScancodeName(keyboard_event.keysym.scancode)
+        // and SDL_GetKeyName(keyboard_event.keysym.sym) to get symbols.
+        switch (key_symbol.sym) {
+        case SDLK_ESCAPE:
+          std::cout << "keyboard quit event" << std::endl;
+          done = true;
+          break;
+        default:
+           // std::cout << "scan code: " << SDL_GetScancodeName(keyboard_event.keysym.scancode)
+           //           << "key name: " << SDL_GetKeyName(keyboard_event.keysym.sym) << std::endl;
+          break;
+        }
+      }
+      else {
+        std::cout << "in default" << std::endl;
       }
     }
+    UpdateOffset();
+    current_tick = SDL_GetTicks();
+    if (current_tick - prev_tick > 5) {
+       std::cout << "in while loop before delay and prev tick is "
+                 << prev_tick << " and current tick is: " << current_tick
+                 << " and diff is " << current_tick - prev_tick << std::endl;
+    }
+    int delay = kDelayBase - (current_tick - prev_tick);
+    if (delay > 0) {
+      SDL_Delay(delay);
+    }
+    prev_tick = SDL_GetTicks();
+    // std::cout << "in while loop after delay and prev tick is "
+    //           << prev_tick << " and current tick is: " << current_tick << std::endl;
+
   }
   return 0;
 }
-
-#include <iostream>
 
 void Game::RenderUnit(unit_config uc)
 {
@@ -81,6 +130,10 @@ std::cerr << "texture created for terrain" << terrain_config->terrain_id << std:
         dest_rect.x = terrain_config->w * x;
         dest_rect.y = terrain_config->h * y * 3 / 4;
       }
+
+      dest_rect.x += x_offset_;
+      dest_rect.y += y_offset_;
+
       dest_rect.w = terrain_config->w; dest_rect.h = terrain_config->h;
       SDL_RenderCopy(renderer_, terrain_config->terrain_texture, &src_rect, &dest_rect);
     }
@@ -88,3 +141,39 @@ std::cerr << "texture created for terrain" << terrain_config->terrain_id << std:
   SDL_RenderPresent(renderer_);
 }
 
+void Game::RenderMap() {
+  int prev_tick = SDL_GetTicks();
+  RenderMap(map_);
+  std::cout << "rendering takes "
+            << SDL_GetTicks() - prev_tick << std::endl;
+}
+
+void Game::UpdateOffset() {
+  int x_offset_inc = 0;
+  int y_offset_inc = 0;
+  if (mouse_x_ > kWindowWidth - scrolling_margin_ &&
+      x_offset_ > kWindowWidth - (map_.get_w() + 1) * 72) {
+    x_offset_inc = -1;
+  }
+  if (mouse_y_ > kWindowHeight - scrolling_margin_ &&
+      y_offset_ > kWindowHeight - (map_.get_h() + 1) * 72 * 3 / 4) {
+    y_offset_inc = -1;
+  }
+  if (mouse_x_ < scrolling_margin_ && x_offset_ < 0) {
+    x_offset_inc = 1;
+  }
+  if (mouse_y_ < scrolling_margin_ && y_offset_ < 0) {
+    y_offset_inc = 1;
+  }
+
+  if (x_offset_inc == 0 && y_offset_inc == 0) {
+    return;
+  }
+
+
+  x_offset_ += x_offset_inc * scrolling_sensitivity_;
+  y_offset_ += y_offset_inc * scrolling_sensitivity_;
+  RenderMap();
+
+  // std::cout << "x offset is: " << x_offset_ << " and y offset is: " << y_offset_ << std::endl;
+}

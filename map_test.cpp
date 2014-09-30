@@ -67,3 +67,15 @@ TEST(LocationTest, InvalideLocation) {
   EXPECT_EQ(l1.GetLocation(NORTH_WEST), l1nw);
   EXPECT_EQ(l1.GetLocation(SOUTH_WEST), l1sw);
 }
+
+TEST(LocationTest, Compare) {
+  Location l1(1, 2);
+  Location l2(2, 3);
+
+  EXPECT_LT(l1, l2);
+  EXPECT_TRUE(l1 < l2);
+  EXPECT_FALSE(l2 < l1);
+  EXPECT_FALSE(l2 < l2);
+  EXPECT_FALSE(l1 < l1);
+
+}

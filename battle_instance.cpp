@@ -1,6 +1,6 @@
 #include "battle_instance.h"
 
-BattleInstance::BattleInstance() : map_(5, 3) {
+BattleInstance::BattleInstance() : map_(15, 12) {
 
 }
 
