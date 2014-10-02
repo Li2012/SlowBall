@@ -9,10 +9,12 @@
 const std::string kUnitDataFile = "units.dat";
 const std::string kTerrainDataFile = "terrain.dat";
 
-struct unit_config {
+struct UnitConfig {
   std::string unit_image;
   std::string unit_name;
   int unit_id;
+  SDL_Texture* unit_texture;
+  int w, h;
 };
 
 struct TerrainConfig {
@@ -27,19 +29,18 @@ class Config {
 public:
   Config();
   ~Config();
-  unit_config get_unit_config(int unit_id) {
-    return unit_config_map_[unit_id];
-  }
+  UnitConfig* get_unit_config(int unit_id);
+  TerrainConfig* get_terrain_config(int terrain_id);
 
-  TerrainConfig* get_terrain_config(int terrain_id) {
-    return &terrain_config_map_[terrain_id];
-  }
 
 private:
   void ReadUnitMap();
   void ReadTerrainMap();
 
-  std::map<int, unit_config> unit_config_map_;
+  // map from unit id to unit config.
+  std::map<int, UnitConfig> unit_config_map_;
+
+  // map from terrain id to terrain config.
   std::map<int, TerrainConfig> terrain_config_map_;
 };
 

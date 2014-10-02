@@ -2,35 +2,35 @@
 
 
 Location Location::GetLocation(const Direction& direction) {
-  if (x == -1 or y == -1) {
+  if (i == -1 or j == -1) {
     return Location(-1, -1);
   }
 
   switch (direction) {
   case EAST:
-    return Location(x + 1, y);
+    return Location(i + 1, j);
   case SOUTH_EAST:
-    if (y % 2 == 0) {
-      return Location(x + 1, y + 1);
+    if (j % 2 == 0) {
+      return Location(i + 1, j + 1);
     }
-    return Location(x, y + 1);
+    return Location(i, j + 1);
   case SOUTH_WEST:
-    if (y % 2 == 0) {
-      return Location(x, y + 1);
+    if (j % 2 == 0) {
+      return Location(i, j + 1);
     }
-    return Location(x - 1, y + 1);
+    return Location(i - 1, j + 1);
   case WEST:
-    return Location(x - 1, y);
+    return Location(i - 1, j);
   case NORTH_WEST:
-    if (y % 2 == 0) {
-      return Location(x, y - 1);
+    if (j % 2 == 0) {
+      return Location(i, j - 1);
     }
-    return Location(x - 1, y - 1);
+    return Location(i - 1, j - 1);
   case NORTH_EAST:
-    if (y % 2 == 0) {
-      return Location(x + 1, y - 1);
+    if (j % 2 == 0) {
+      return Location(i + 1, j - 1);
     }
-    return Location(x, y - 1);
+    return Location(i, j - 1);
   default:
     return Location(-1, -1);
   }
@@ -40,7 +40,7 @@ std::string Location::DebugString() const {
   std::stringstream ss;
   std::string result;
 
-  ss << "(" << x << "," << y << ")";
+  ss << "(" << i << "," << j << ")";
   ss >> result;
 
   return result;
@@ -51,23 +51,23 @@ std::ostream& operator<<(std::ostream& stream, const Location& l) {
 }
 
 Map::Map(int width, int height): w_(width), h_(height) {
-  for (int y = 0; y < height; y++) {
+  for (int j = 0; j < height; j++) {
     std::vector<Tile> row(width);
-    for (int x = 0; x < width; x++) {
+    for (int i = 0; i < width; i++) {
       Tile t;
-      t.terrain = ((346 * y + 573 * x) % 79) % 3 + 1;
-      row[x] = t;
+      t.terrain = ((346 * j + 573 * i) % 79) % 3 + 1;
+      row[i] = t;
     }
     tiles_.push_back(row);
   }
 }
 
 Tile Map::GetTile(Location location) const {
-  return tiles_[location.y][location.x];
+  return tiles_[location.j][location.i];
 }
 
 bool Map::IsValidLocation(const Location& location) const {
-  return location.x >= 0 && location.y >= 0 && location.x < w_ && location.y < h_;
+  return location.i >= 0 && location.j >= 0 && location.i < w_ && location.j < h_;
 }
 
 std::string Map::DebugString(int spaces) const {
@@ -76,13 +76,13 @@ std::string Map::DebugString(int spaces) const {
 
   ss << s + "map debug string\n";
 
-  for (int y = 0; y < h_; y++) {
+  for (int j = 0; j < h_; j++) {
     ss << s;
-    if (y % 2 == 0) {
+    if (j % 2 == 0) {
       ss << " ";
     }
-    for (int x = 0; x < w_; x++) {
-      ss << tiles_[y][x].terrain << " ";
+    for (int i = 0; i < w_; i++) {
+      ss << tiles_[j][i].terrain << " ";
     }
     ss << "\n";
   }

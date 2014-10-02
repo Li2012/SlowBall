@@ -9,24 +9,29 @@
 int main() {
   BattleInstance bi;
   UnitGroup ug;
-
+  ug.unit_.unit_id_ = 1;
   ug.location_ = Location(2, 1);
 
-  //  bi.unit_groups_vector_.push_back(ug);
   bi.AddUnitGroup(ug);
-  std::cout << bi << std::endl;
-
   bi.MoveUnitGroup(Location(2, 1), Location(2, 2));
-  std::cout << bi << std::endl;
 
-  std::cout << "hello" << std::endl;
+  ug.location_ = Location(3, 5);
+  bi.AddUnitGroup(ug);
+  bi.MoveUnitGroup(Location(3, 5), Location(0, 0));
+  ug.unit_.unit_id_ = 2;
+  ug.location_ = Location(9, 4);
+  bi.AddUnitGroup(ug);
+  ug.location_ = Location(9, 7);
+  bi.AddUnitGroup(ug);
+  ug.location_ = Location(1, 7);
+  bi.AddUnitGroup(ug);
 
   Game g;
   //  Map m(15, 10);
-  g.map_ = bi.map_;
+  //g.map_ = bi.map_;
   //g.RenderMap(bi.map_);
-  g.RunGame();
-
+  //g.RunGame();
+  g.RunBattleInstance(&bi);
 
   return 0;
 }

@@ -20,6 +20,8 @@ class BattleInstance {
   Map map_;
   std::map<Location, int> location_to_index_map_;
 
+  bool battle_done_;
+
   std::string DebugString(int spaces = 0) const;
 };
 

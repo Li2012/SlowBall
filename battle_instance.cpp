@@ -1,7 +1,7 @@
 #include "battle_instance.h"
 
 BattleInstance::BattleInstance() : map_(15, 12) {
-
+  battle_done_ = false;
 }
 
 void BattleInstance::AddUnitGroup(UnitGroup unit_group) {

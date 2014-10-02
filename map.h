@@ -34,25 +34,27 @@ enum Direction {
 
 struct Location {
   Location() {
-    x = -1;
-    y = -1;
+    i = -1;
+    j = -1;
   }
 
-  Location(int x, int y) {
-    if (x < 0 || y < 0) {
-      this->x = -1;
-      this->y = -1;
+  Location(int i, int j) {
+    if (i < 0 || j < 0) {
+      this->i = -1;
+      this->j = -1;
       return;
     }
-    this->x = x; this->y = y;
+    this->i = i; this->j = j;
   }
 
   Location GetLocation(const Direction& d);
 
   std::string DebugString() const;
 
-  int x;
-  int y;
+  // use i, j. since x, y are used for mouse point.
+  // i is the horizontal index, and j is the vertical index.
+  int i;
+  int j;
 
 };
 
@@ -60,7 +62,7 @@ struct Location {
 std::ostream& operator<< (std::ostream& stream, const Location& l);
 
 inline bool operator== (const Location& lhs, const Location& rhs) {
-  return lhs.x == rhs.x && lhs.y == rhs.y;
+  return lhs.i == rhs.i && lhs.j == rhs.j;
 }
 
 inline bool operator!= (const Location& lhs, const Location& rhs) {
@@ -68,9 +70,9 @@ inline bool operator!= (const Location& lhs, const Location& rhs) {
 }
 
 inline bool operator< (const Location& lhs, const Location& rhs) {
-  if (lhs.x < rhs.x) return true;
-  if (lhs.x > rhs.x) return false;
-  return lhs.y < rhs.y;
+  if (lhs.i < rhs.i) return true;
+  if (lhs.i > rhs.i) return false;
+  return lhs.j < rhs.j;
 }
 
 struct Tile {
