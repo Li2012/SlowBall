@@ -1,7 +1,8 @@
 #include "config.h"
 
 #include <fstream>
-#include <iostream>
+
+#include <glog/logging.h>
 
 Config::Config() {
   ReadUnitMap();
@@ -10,22 +11,26 @@ Config::Config() {
 
 Config::~Config() {
   for (auto it = terrain_config_map_.begin(); it != terrain_config_map_.end(); it++) {
-    SDL_DestroyTexture(it->second.terrain_texture);
-std::cerr << "texture destroy for terrain" << it->second.terrain_id << std::endl;
-    it->second.terrain_texture = nullptr;
+    if (it->second.terrain_texture != nullptr) {
+      SDL_DestroyTexture(it->second.terrain_texture);
+      LOG(INFO) << "texture destroy for terrain" << it->second.terrain_id;
+      it->second.terrain_texture = nullptr;
+    }
   }
 
   for (auto it = unit_config_map_.begin(); it != unit_config_map_.end(); it++) {
-    SDL_DestroyTexture(it->second.unit_texture);
-std::cerr << "texture destroy for unit" << it->second.unit_id << std::endl;
-    it->second.unit_texture = nullptr;
+    if (it->second.unit_texture != nullptr) {
+      SDL_DestroyTexture(it->second.unit_texture);
+      LOG(INFO) << "texture destroy for unit" << it->second.unit_id;
+      it->second.unit_texture = nullptr;
+    }
   }
-
 }
 
 UnitConfig* Config::get_unit_config(int unit_id) {
   const auto& iter = unit_config_map_.find(unit_id);
   if (iter == unit_config_map_.end()) {
+    LOG(ERROR) << "looking up fail for unit_id: " << unit_id;
     return nullptr;
   }
   return &iter->second;
@@ -34,6 +39,7 @@ UnitConfig* Config::get_unit_config(int unit_id) {
 TerrainConfig* Config::get_terrain_config(int terrain_id) {
   const auto& iter = terrain_config_map_.find(terrain_id);
   if (iter == terrain_config_map_.end()) {
+    LOG(ERROR) << "looking up fail for terrain_id: " << terrain_id;
     return nullptr;
   }
   return &iter->second;
@@ -41,7 +47,7 @@ TerrainConfig* Config::get_terrain_config(int terrain_id) {
 
 void Config::ReadUnitMap() {
   std::ifstream fin_dat(kUnitDataFile.c_str());
-  while (! fin_dat.eof()) {
+  while (!fin_dat.eof()) {
     std::string config_file_name;
     fin_dat >> config_file_name;
     std::ifstream fin_cfg(config_file_name.c_str());

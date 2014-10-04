@@ -1,5 +1,7 @@
 #include "battle_instance.h"
 
+#include <glog/logging.h>
+
 BattleInstance::BattleInstance() : map_(15, 12) {
   battle_done_ = false;
 }
@@ -20,13 +22,23 @@ void BattleInstance::MoveUnitGroup(const Location &src, const Location &dest) {
     return;
   }
 
-  const auto& iter = location_to_index_map_.find(src);
 
-  if (iter == location_to_index_map_.end()) {
+  // the source tile should have unit in it.
+  const auto& src_iter = location_to_index_map_.find(src);
+  if (src_iter == location_to_index_map_.end()) {
+    LOG(ERROR) << "can't move. src is empty";
     return;
   }
-  const int index = iter->second;
-  location_to_index_map_.erase(iter);
+
+  // destination tile should not have unit in it.
+  const auto& dest_iter = location_to_index_map_.find(dest);
+  if (dest_iter != location_to_index_map_.end()) {
+    LOG(ERROR) << "can't move. dest is occupied";
+    return;
+  }
+
+  const int index = src_iter->second;
+  location_to_index_map_.erase(src_iter);
   location_to_index_map_[dest] = index;
   unit_groups_vector_[index].location_ = dest;
 }

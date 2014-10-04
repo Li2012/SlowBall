@@ -14,7 +14,6 @@ struct UnitConfig {
   std::string unit_name;
   int unit_id;
   SDL_Texture* unit_texture;
-  int w, h;
 };
 
 struct TerrainConfig {
@@ -22,7 +21,6 @@ struct TerrainConfig {
   std::string terrain_name;
   int terrain_id;
   SDL_Texture* terrain_texture;
-  int w, h;
 };
 
 class Config {

@@ -1,13 +1,11 @@
 #ifndef GAME_H_
 #define GAME_H_
 
+#include <SDL2/SDL.h>
+
 #include "config.h"
 #include "map.h"
 
-#include <SDL2/SDL.h>
-
-const int kWindowWidth = 800;
-const int kWindowHeight = 600;
 const int kRefreshRate = 60;
 const int kDelayBase = 1000 / kRefreshRate;
 const int kTileWidth = 72;
@@ -29,14 +27,11 @@ public:
   int RunGame();
   void RunBattleInstance(BattleInstance* battle_instance);
 
-  void RenderBattleInstance(BattleInstance* battle_instance);
-  // void PrepareRendererForUnit(UnitConfig uc);
+  void RenderBattleInstance(const BattleInstance& battle_instance);
   void PrepareRendererForUnitGroup(const UnitGroup& unit_group);
-  // void RenderUnit(UnitConfig uc);
 
   void PrepareRendererForMap(const Map& m);
   void RenderMap(const Map& m);
-  // void RenderMap();
 
   void Render();
   void RenderClear();
@@ -45,7 +40,6 @@ public:
   Location PointToLocation(Point p);
   Point LocationToCenterPoint(Location location);
   long long DistSquare(Point p1, Point p2);
-  // Map map_;
 
 private:
   SDL_Window* window_;
@@ -61,6 +55,13 @@ private:
   int scrolling_sensitivity_;
 
   Config config_;
+};
+
+struct ABGR {
+  Uint8 R;
+  Uint8 G;
+  Uint8 B;
+  Uint8 A;
 };
 
 #endif /* GAME_H_ */

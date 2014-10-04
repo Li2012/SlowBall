@@ -9,7 +9,7 @@ CXXFLAGS = -isystem $(GTEST_DIR)/include
 CXXFLAGS += -g -Wall -Wextra -pthread --std=c++11
 
 # Linking flags
-LDFLAGS = -lSDL2 -lSDL2_image
+LDFLAGS = -lSDL2 -lSDL2_image -lgflags -lglog
 
 TESTS = map_unittest
 

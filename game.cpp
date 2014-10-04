@@ -1,22 +1,39 @@
 #include "game.h"
 
-#include <iostream>
 #include <SDL2/SDL_image.h>
+#include <gflags/gflags.h>
+#include <glog/logging.h>
 
 #include "battle_instance.h"
+
+DEFINE_int32(window_width, 800, "window width");
+DEFINE_int32(window_height, 600, "window height");
 
 Game::Game()
     // : map_(0, 0)
 {
-  window_ = SDL_CreateWindow("SlowBall", 100, 100, kWindowWidth, kWindowHeight, SDL_WINDOW_OPENGL);
-  renderer_ = SDL_CreateRenderer(window_, -1, SDL_RENDERER_ACCELERATED);
+  window_ = SDL_CreateWindow("SlowBall",          // titile
+                             100,                 // x
+                             100,                 // y
+                             FLAGS_window_width,  // w
+                             FLAGS_window_height, // h
+                             SDL_WINDOW_OPENGL);  // flags
+
+  CHECK(window_ != nullptr) << "NULL window_";
+
+  renderer_ = SDL_CreateRenderer(window_,                     // window
+                                 -1,                          // index
+                                 SDL_RENDERER_ACCELERATED);   // flags
+
+  CHECK(renderer_ != nullptr) << "NULL renderer_";
+
+
   SDL_SetRenderDrawColor(renderer_, 0xff, 0xff, 0xff, 0xff);
   SDL_RenderClear(renderer_);
   SDL_RenderPresent(renderer_);
 
   scrolling_sensitivity_ = 5;
   scrolling_margin_ = 15;
-  //RenderUnit(*config_.get_unit_config(1));
 }
 
 Game::~Game() {
@@ -32,11 +49,10 @@ int Game::RunGame() {
   mouse_x_ = 0;
   mouse_y_ = 0;
 
-  //RenderMap();
   while (!done) {
     while (SDL_PollEvent(&event)) {
       if (event.type == SDL_QUIT ) {
-        std::cout << "quit event" << std::endl;
+        LOG(INFO) << "quit event";
         done = true;
       }
 
@@ -54,33 +70,33 @@ int Game::RunGame() {
         // and SDL_GetKeyName(keyboard_event.keysym.sym) to get symbols.
         switch (key_symbol.sym) {
         case SDLK_ESCAPE:
-          std::cout << "keyboard quit event" << std::endl;
+          LOG(INFO) << "keyboard quit event";
           done = true;
           break;
         default:
-           // std::cout << "scan code: " << SDL_GetScancodeName(keyboard_event.keysym.scancode)
-           //           << "key name: " << SDL_GetKeyName(keyboard_event.keysym.sym) << std::endl;
+           // LOG(INFO) << "scan code: " << SDL_GetScancodeName(keyboard_event.keysym.scancode)
+           //           << "key name: " << SDL_GetKeyName(keyboard_event.keysym.sym);
           break;
         }
       }
       else {
-        std::cout << "in default" << std::endl;
+        LOG(INFO) << "in default";
       }
     }
     //UpdateOffset();
     current_tick = SDL_GetTicks();
     if (current_tick - prev_tick > 5) {
-       std::cout << "in while loop before delay and prev tick is "
+       LOG(INFO) << "in while loop before delay and prev tick is "
                  << prev_tick << " and current tick is: " << current_tick
-                 << " and diff is " << current_tick - prev_tick << std::endl;
+                 << " and diff is " << current_tick - prev_tick;
     }
     int delay = kDelayBase - (current_tick - prev_tick);
     if (delay > 0) {
       SDL_Delay(delay);
     }
     prev_tick = SDL_GetTicks();
-    // std::cout << "in while loop after delay and prev tick is "
-    //           << prev_tick << " and current tick is: " << current_tick << std::endl;
+    // LOG(INFO) << "in while loop after delay and prev tick is "
+    //           << prev_tick << " and current tick is: " << current_tick;
 
   }
   return 0;
@@ -97,12 +113,14 @@ void Game::RunBattleInstance(BattleInstance* battle_instance) {
   int prev_tick = SDL_GetTicks();
   int current_tick = SDL_GetTicks();
 
-  RenderBattleInstance(battle_instance);
+  Location src, dest;
+
+  RenderBattleInstance(*battle_instance);
 
   while (!battle_instance->battle_done_) {
     while (SDL_PollEvent(&event)) {
       if (event.type == SDL_QUIT ) {
-        std::cout << "quit event, quiting battle" << std::endl;
+        LOG(INFO) << "quit event, quiting battle";
         battle_instance->battle_done_ = true;
       }
       else if (event.type == SDL_MOUSEMOTION) {
@@ -110,19 +128,37 @@ void Game::RunBattleInstance(BattleInstance* battle_instance) {
         mouse_x_ = mouse_motion_event.x;
         mouse_y_ = mouse_motion_event.y;
         Location l = PointToLocation(Point(mouse_x_, mouse_y_));
-        std::cout << l << std::endl;
+        VLOG(2) << l;
+      }
+      else if (event.type == SDL_MOUSEBUTTONDOWN) {
+        SDL_MouseButtonEvent mouse_button_event = event.button;
+        if (mouse_button_event.button == SDL_BUTTON_LEFT) {
+          mouse_x_ = mouse_button_event.x;
+          mouse_y_ = mouse_button_event.y;
+          src = PointToLocation(Point(mouse_x_, mouse_y_));
+        }
+      }
+      else if (event.type == SDL_MOUSEBUTTONUP) {
+        SDL_MouseButtonEvent mouse_button_event = event.button;
+        if (mouse_button_event.button == SDL_BUTTON_LEFT) {
+          mouse_x_ = mouse_button_event.x;
+          mouse_y_ = mouse_button_event.y;
+          dest = PointToLocation(Point(mouse_x_, mouse_y_));
+          LOG(INFO) << "moving from " << src << " to " << dest;
+          battle_instance->MoveUnitGroup(src, dest);
+        }
       }
       else {
 
       }
     }
     UpdateBattleInstanceOffset(*battle_instance);
-    RenderBattleInstance(battle_instance);
+    RenderBattleInstance(*battle_instance);
     current_tick = SDL_GetTicks();
     if (current_tick - prev_tick > 5) {
-       std::cout << "in while loop before delay and prev tick is "
+       LOG(INFO) << "in while loop before delay and prev tick is "
                  << prev_tick << " and current tick is: " << current_tick
-                 << " and diff is " << current_tick - prev_tick << std::endl;
+                 << " and diff is " << current_tick - prev_tick;
     }
     int delay = kDelayBase - (current_tick - prev_tick);
     if (delay > 0) {
@@ -134,104 +170,77 @@ void Game::RunBattleInstance(BattleInstance* battle_instance) {
   return;
 }
 
-void Game::RenderBattleInstance(BattleInstance* battle_instance) {
+void Game::RenderBattleInstance(const BattleInstance& battle_instance) {
   RenderClear();
-  PrepareRendererForMap(battle_instance->map_);
-  for (const UnitGroup& unit_group : battle_instance->unit_groups_vector_) {
+  PrepareRendererForMap(battle_instance.map_);
+  for (const UnitGroup& unit_group : battle_instance.unit_groups_vector_) {
     PrepareRendererForUnitGroup(unit_group);
   }
   Render();
 }
 
-// void Game::PrepareRendererForUnit(UnitConfig uc) {
-//   SDL_Surface* image = IMG_Load(uc.unit_image.c_str());
-//   texture_ = SDL_CreateTextureFromSurface(renderer_, image);
-//   SDL_Rect rect(image->clip_rect);
-//   // rect.x += rect.w;
-//   // rect.y += rect.h;
-
-//   SDL_FreeSurface(image);
-//   //while (1) {
-//   //SDL_RenderCopy(renderer_, texture_, &image->clip_rect, &image->clip_rect);
-//   //SDL_RenderPresent(renderer_);
-//   //SDL_RenderClear(renderer_);
-//   SDL_RenderCopy(renderer_, texture_, &image->clip_rect, &rect);
-// }
-
 void Game::PrepareRendererForUnitGroup(const UnitGroup& unit_group) {
   int unit_id = unit_group.unit_.unit_id_;
   Location location = unit_group.location_;
-  int i = location.i; int j = location.j;
+  Point center = LocationToCenterPoint(location);
   UnitConfig* unit_config = config_.get_unit_config(unit_id);
   if (unit_config->unit_texture == nullptr) {
-    std::cout << "loading unit image for unit id:" << unit_id << std::endl;
+    LOG(INFO) << "loading unit image for unit id:" << unit_id;
     SDL_Surface* image = IMG_Load(unit_config->unit_image.c_str());
+    SDL_PixelFormat* pixel_format = image->format;
+
+    CHECK_EQ(SDL_PIXELTYPE(pixel_format->format), SDL_PIXELTYPE_PACKED32);
+    CHECK_EQ(SDL_PIXELORDER(pixel_format->format), SDL_PACKEDORDER_ABGR);
+    CHECK_EQ(SDL_PIXELLAYOUT(pixel_format->format), SDL_PACKEDLAYOUT_8888);
+
+    CHECK_EQ(SDL_BITSPERPIXEL(pixel_format->format), 32);
+    CHECK_EQ(SDL_BYTESPERPIXEL(pixel_format->format), 4);
+
     unit_config->unit_texture = SDL_CreateTextureFromSurface(renderer_, image);
-    unit_config->w = image->clip_rect.w;
-    unit_config->h = image->clip_rect.h;
+    CHECK_EQ(image->clip_rect.w, kTileWidth);
+    CHECK_EQ(image->clip_rect.h, kTileHeight);
     SDL_FreeSurface(image);
   }
   SDL_Rect src_rect;
   src_rect.x = 0; src_rect.y = 0;
-  src_rect.w = unit_config->w; src_rect.h = unit_config->h;
+  src_rect.w = kTileWidth; src_rect.h = kTileHeight;
 
   SDL_Rect dest_rect;
-  if (j % 2 == 0) {
-    dest_rect.x = unit_config->w / 2 + unit_config->w * i;
-    dest_rect.y = unit_config->h * j * 3 / 4;
-  }
-  else {
-    dest_rect.x = unit_config->w * i;
-    dest_rect.y = unit_config->h * j * 3 / 4;
-  }
-
+  dest_rect.x = center.x - kTileWidth / 2;
+  dest_rect.y = center.y - kTileHeight / 2;
   dest_rect.x += battle_instance_x_offset_;
   dest_rect.y += battle_instance_y_offset_;
 
-  dest_rect.w = unit_config->w; dest_rect.h = unit_config->h;
+  dest_rect.w = kTileWidth; dest_rect.h = kTileHeight;
   SDL_RenderCopy(renderer_, unit_config->unit_texture, &src_rect, &dest_rect);
 }
-
-
-// void Game::RenderUnit(UnitConfig uc)
-// {
-//   SDL_RenderClear(renderer_);
-//   PrepareRendererForUnit(uc);
-//   SDL_RenderPresent(renderer_);
-//   //}
-// }
 
 void Game::PrepareRendererForMap(const Map& m) {
   for (int j = 0; j < m.get_h(); j++) {
     for (int i = 0; i < m.get_w(); i++) {
       Location location(i, j);
+      Point center = LocationToCenterPoint(location);
       Tile tile = m.GetTile(location);
       TerrainConfig* terrain_config = config_.get_terrain_config(tile.terrain);
       if (terrain_config->terrain_texture == nullptr) {
         SDL_Surface* image = IMG_Load(terrain_config->terrain_image_path.c_str());
         terrain_config->terrain_texture = SDL_CreateTextureFromSurface(renderer_, image);
-std::cerr << "texture created for terrain" << terrain_config->terrain_id << std::endl;
-        terrain_config->w = image->clip_rect.w;
-        terrain_config->h = image->clip_rect.h;
+        LOG(INFO) << "texture created for terrain" << terrain_config->terrain_id;
+        CHECK_EQ(kTileWidth, image->clip_rect.w);
+        CHECK_EQ(kTileHeight, image->clip_rect.h);
         SDL_FreeSurface(image);
       }
       SDL_Rect src_rect;
       src_rect.x = 0; src_rect.y = 0;
-      src_rect.w = terrain_config->w; src_rect.h = terrain_config->h;
+      src_rect.w = kTileWidth; src_rect.h = kTileHeight;
       SDL_Rect dest_rect;
-      if (j % 2 == 0) {
-        dest_rect.x = terrain_config->w / 2 + terrain_config->w * i;
-        dest_rect.y = terrain_config->h * j * 3 / 4;
-      }
-      else {
-        dest_rect.x = terrain_config->w * i;
-        dest_rect.y = terrain_config->h * j * 3 / 4;
-      }
 
+      dest_rect.x = center.x - kTileWidth / 2;
+      dest_rect.y = center.y - kTileHeight / 2;
       dest_rect.x += battle_instance_x_offset_;
       dest_rect.y += battle_instance_y_offset_;
 
-      dest_rect.w = terrain_config->w; dest_rect.h = terrain_config->h;
+      dest_rect.w = kTileWidth; dest_rect.h = kTileHeight;
       SDL_RenderCopy(renderer_, terrain_config->terrain_texture, &src_rect, &dest_rect);
     }
   }
@@ -243,13 +252,6 @@ void Game::RenderMap(const Map& m) {
   PrepareRendererForMap(m);
   SDL_RenderPresent(renderer_);
 }
-
-// void Game::RenderMap() {
-//   int prev_tick = SDL_GetTicks();
-//   RenderMap(map_);
-//   std::cout << "rendering takes "
-//             << SDL_GetTicks() - prev_tick << std::endl;
-// }
 
 void Game::Render() {
   SDL_RenderPresent(renderer_);
@@ -264,12 +266,12 @@ void Game::UpdateBattleInstanceOffset(const BattleInstance& battle_instance) {
   const Map& map = battle_instance.map_;
   int battle_instance_x_offset_inc = 0;
   int battle_instance_y_offset_inc = 0;
-  if (mouse_x_ > kWindowWidth - scrolling_margin_ &&
-      battle_instance_x_offset_ > kWindowWidth - (map.get_w() + 1) * 72) {
+  if (mouse_x_ > FLAGS_window_width - scrolling_margin_ &&
+      battle_instance_x_offset_ > FLAGS_window_width - (map.get_w() + 1) * 72) {
     battle_instance_x_offset_inc = -1;
   }
-  if (mouse_y_ > kWindowHeight - scrolling_margin_ &&
-      battle_instance_y_offset_ > kWindowHeight - (map.get_h() + 1) * 72 * 3 / 4) {
+  if (mouse_y_ > FLAGS_window_height - scrolling_margin_ &&
+      battle_instance_y_offset_ > FLAGS_window_height - (map.get_h() + 1) * 72 * 3 / 4) {
     battle_instance_y_offset_inc = -1;
   }
   if (mouse_x_ < scrolling_margin_ && battle_instance_x_offset_ < 0) {
@@ -286,9 +288,8 @@ void Game::UpdateBattleInstanceOffset(const BattleInstance& battle_instance) {
 
   battle_instance_x_offset_ += battle_instance_x_offset_inc * scrolling_sensitivity_;
   battle_instance_y_offset_ += battle_instance_y_offset_inc * scrolling_sensitivity_;
-  //RenderMap();
 
-  // std::cout << "x offset is: " << x_offset_ << " and y offset is: " << y_offset_ << std::endl;
+  VLOG(2) << "x offset is: " << battle_instance_x_offset_ << " and y offset is: " << battle_instance_y_offset_;
 }
 
 Location Game::PointToLocation(Point p) {
@@ -340,8 +341,6 @@ Point Game::LocationToCenterPoint(Location location) {
     x = kTileWidth * i;
     y = kTileHeight * j * 3 / 4;
   }
-  // std::cout << "calling LocationToCenterPoint, location is " << location
-  //           << " and returning " << x + kTileWidth / 2 << "," << y + kTileHeight / 2 << std::endl;
   return Point(x + kTileWidth / 2, y + kTileHeight / 2);
 }
 

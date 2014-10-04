@@ -1,12 +1,17 @@
 #include <iostream>
 
+#include <gflags/gflags.h>
+#include <glog/logging.h>
+
+#include "battle_instance.h"
 #include "config.h"
 #include "game.h"
 #include "map.h"
 
-#include "battle_instance.h"
+int main(int argc, char* argv[]) {
+  gflags::ParseCommandLineFlags(&argc, &argv, true);
+  google::InitGoogleLogging(argv[0]);
 
-int main() {
   BattleInstance bi;
   UnitGroup ug;
   ug.unit_.unit_id_ = 1;
