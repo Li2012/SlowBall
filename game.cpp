@@ -12,6 +12,10 @@ DEFINE_int32(window_height, 600, "window height");
 Game::Game()
     // : map_(0, 0)
 {
+  CHECK((FLAGS_window_width == 800 && FLAGS_window_height == 600) ||
+        (FLAGS_window_width == 1366 && FLAGS_window_height == 768))
+      << "wrong window width and height";
+
   window_ = SDL_CreateWindow("SlowBall",          // titile
                              100,                 // x
                              100,                 // y
@@ -27,8 +31,6 @@ Game::Game()
 
   CHECK(renderer_ != nullptr) << "NULL renderer_";
 
-
-  SDL_SetRenderDrawColor(renderer_, 0xff, 0xff, 0xff, 0xff);
   SDL_RenderClear(renderer_);
   SDL_RenderPresent(renderer_);
 
@@ -144,7 +146,7 @@ void Game::RunBattleInstance(BattleInstance* battle_instance) {
           mouse_x_ = mouse_button_event.x;
           mouse_y_ = mouse_button_event.y;
           dest = PointToLocation(Point(mouse_x_, mouse_y_));
-          LOG(INFO) << "moving from " << src << " to " << dest;
+          VLOG(2) << "moving from " << src << " to " << dest;
           battle_instance->MoveUnitGroup(src, dest);
         }
       }
@@ -176,6 +178,7 @@ void Game::RenderBattleInstance(const BattleInstance& battle_instance) {
   for (const UnitGroup& unit_group : battle_instance.unit_groups_vector_) {
     PrepareRendererForUnitGroup(unit_group);
   }
+  PrepareRendererForInfo();
   Render();
 }
 
@@ -187,6 +190,8 @@ void Game::PrepareRendererForUnitGroup(const UnitGroup& unit_group) {
   if (unit_config->unit_texture == nullptr) {
     LOG(INFO) << "loading unit image for unit id:" << unit_id;
     SDL_Surface* image = IMG_Load(unit_config->unit_image.c_str());
+    CHECK(image != nullptr) << "failed loading image for unit id: " << unit_id
+                            << " and file: " << unit_config->unit_image;
     SDL_PixelFormat* pixel_format = image->format;
 
     CHECK_EQ(SDL_PIXELTYPE(pixel_format->format), SDL_PIXELTYPE_PACKED32);
@@ -224,6 +229,8 @@ void Game::PrepareRendererForMap(const Map& m) {
       TerrainConfig* terrain_config = config_.get_terrain_config(tile.terrain);
       if (terrain_config->terrain_texture == nullptr) {
         SDL_Surface* image = IMG_Load(terrain_config->terrain_image_path.c_str());
+        CHECK(image != nullptr) << "failed loading image for terrain: " << tile.terrain
+                            << " and file: " << terrain_config->terrain_image_path;
         terrain_config->terrain_texture = SDL_CreateTextureFromSurface(renderer_, image);
         LOG(INFO) << "texture created for terrain" << terrain_config->terrain_id;
         CHECK_EQ(kTileWidth, image->clip_rect.w);
@@ -246,6 +253,35 @@ void Game::PrepareRendererForMap(const Map& m) {
   }
 }
 
+void Game::PrepareRendererForInfo() {
+  SDL_SetRenderDrawColor(renderer_, 0xff, 0xff, 0xff, 0xff);
+  SDL_Rect top_info_rect;
+  top_info_rect.x = 0;
+  top_info_rect.y = 0;
+  top_info_rect.w = FLAGS_window_width;
+  top_info_rect.h = kTopInfoHeight;
+  SDL_RenderFillRect(renderer_, &top_info_rect);
+
+  SDL_Rect bottom_info_rect;
+  bottom_info_rect.x = 0;
+  bottom_info_rect.y = FLAGS_window_height - kBottomInfoHeight;
+  bottom_info_rect.w = FLAGS_window_width;
+  bottom_info_rect.h = kBottomInfoHeight;
+  SDL_RenderFillRect(renderer_, &bottom_info_rect);
+
+  SDL_Rect right_info_rect;
+  right_info_rect.x = FLAGS_window_width - kRightInfoWidth;
+  right_info_rect.y = kTopInfoHeight;
+  right_info_rect.w = kRightInfoWidth;
+  right_info_rect.h = FLAGS_window_height - kTopInfoHeight - kBottomInfoHeight;
+  SDL_RenderFillRect(renderer_, &right_info_rect);
+
+  SDL_SetRenderDrawColor(renderer_, 0x0, 0x0, 0x0, 0xff);
+  SDL_RenderDrawRect(renderer_, &top_info_rect);
+  SDL_RenderDrawRect(renderer_, &bottom_info_rect);
+  SDL_RenderDrawRect(renderer_, &right_info_rect);
+  SDL_SetRenderDrawColor(renderer_, 0xff, 0xff, 0xff, 0xff);
+}
 
 void Game::RenderMap(const Map& m) {
   SDL_RenderClear(renderer_);
@@ -341,10 +377,21 @@ Point Game::LocationToCenterPoint(Location location) {
     x = kTileWidth * i;
     y = kTileHeight * j * 3 / 4;
   }
-  return Point(x + kTileWidth / 2, y + kTileHeight / 2);
+  return Point(x + kTileWidth / 2, y + kTileHeight / 2 + kTopInfoHeight);
 }
 
 long long Game::DistSquare(Point p1, Point p2) {
   return (p1.x - p2.x) * (p1.x - p2.x) +
       (p1.y - p2.y) * (p1.y - p2.y);
+}
+
+void Game::ChangeColor(SDL_Surface* image, SDL_PixelFormat* pixel_format) {
+  ABGR* pixels = static_cast<ABGR*>(image->pixels);
+  for (int i = 0; i < image->w * image->h; i++) {
+    if (pixels[i].R > pixels[i].G && pixels[i].R > pixels[i].B) {
+      Uint8 tmp = pixels[i].R;
+      pixels[i].R = pixels[i].G;
+      pixels[i].G = tmp;
+    }
+  }
 }

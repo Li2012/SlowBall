@@ -1,2 +1,4 @@
-Now add some basic tests frameworks. Using gtest. 
-Add skeleton makefile to build the target and tests.
+Need SDL2, SDL2_image, gflags, glog to build the binary.
+Need gtest to build the unit test.
+
+
