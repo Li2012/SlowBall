@@ -9,7 +9,7 @@ CXXFLAGS = -isystem $(GTEST_DIR)/include
 CXXFLAGS += -g -Wall -Wextra -pthread --std=c++11
 
 # Linking flags
-LDFLAGS = -lSDL2 -lSDL2_image -lgflags -lglog
+LDFLAGS = -lSDL2 -lSDL2_image -lSDL2_ttf -lgflags -lglog
 
 TESTS = map_unittest
 
@@ -56,6 +56,6 @@ map_test.o : map_test.cpp map.h $(GTEST_HEADERS)
 map_unittest : map.o map_test.o gtest_main.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
 
-SlowBall : Main.cpp game.cpp map.cpp config.cpp battle_instance.cpp unit.cpp
+SlowBall : Main.cpp game.cpp map.cpp config.cpp battle_instance.cpp unit.cpp display.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
 
