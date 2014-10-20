@@ -23,7 +23,9 @@ class Display {
 
   void CreateRenderer(SDL_Window* window);
 
-  void RenderBattleInstance(const BattleInstance& battle_instance, Config* config);
+  void SetBattleInstance(BattleInstance* battle_instance);
+  void ClearBattleInstance();
+  void RenderBattleInstance(Config* config);
 
  private:
   void Render();
@@ -32,15 +34,15 @@ class Display {
   void PrepareRendererForMap(const Map& m, Config* config);
   void PrepareRendererForInfo();
   void PrepareRendererForText(std::string text, SDL_Rect dest_port, int x, int y,
-                  SDL_Color text_color);
+                              SDL_Color text_color);
 
  public:
   void PrepareRendererForLocationInfo(Location location);
 
  public:
-  void UpdateMousePoint(Point mouse_point);
+  void UpdateMousePoint(const Point mouse_point);
   void UpdateBattleInstanceOffset(const BattleInstance& battle_instance,
-                                  const int mouse_x, const int mouse_y);
+                                  const Point mouse_point);
 
   void ClearBattleInstanceOffset();
 
@@ -57,6 +59,8 @@ class Display {
   SDL_Rect right_info_rect_;
   SDL_Rect main_rect_;
   SDL_Color text_color_;
+
+  BattleInstance* battle_instance_;
 
   Point mouse_point_;
   int battle_instance_x_offset_;

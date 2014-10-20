@@ -13,6 +13,7 @@ int main(int argc, char* argv[]) {
   google::InitGoogleLogging(argv[0]);
 
   BattleInstance bi;
+  bi.map_.ReadMapFromFile("1.map");
   UnitGroup ug;
   ug.unit_.unit_id_ = 1;
   ug.location_ = Location(2, 1);
@@ -31,7 +32,9 @@ int main(int argc, char* argv[]) {
   ug.location_ = Location(1, 7);
   bi.AddUnitGroup(ug);
 
+  LOG(INFO) << "A";
   Game g;
+  LOG(INFO) << "B";
   //  Map m(15, 10);
   //g.map_ = bi.map_;
   //g.RenderMap(bi.map_);

@@ -9,6 +9,7 @@ BattleInstance::BattleInstance() : map_(15, 12) {
 void BattleInstance::AddUnitGroup(UnitGroup unit_group) {
   // check valid location.
   if (!map_.IsValidLocation(unit_group.location_)) {
+    LOG(ERROR) << "invalid location:" << unit_group.location_;
     return;
   }
 

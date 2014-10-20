@@ -82,12 +82,16 @@ struct Tile {
 class Map {
  public:
   Map(int width, int height);
+  Map(std::string map_file);
+
+  void ReadMapFromStream(std::istream& in);
+  void ReadMapFromFile(std::string map_file);
 
   Tile GetTile(Location location) const;
   int get_w() const {return w_;}
-  void set_w(int width) {w_ = width;}
+  //void set_w(int width) {w_ = width;}
   int get_h() const {return h_;}
-  void set_h(int height) {h_ = height;}
+  //void set_h(int height) {h_ = height;}
 
   bool IsValidLocation(const Location& location) const;
 

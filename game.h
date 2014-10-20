@@ -31,8 +31,9 @@ class Game {
   SDL_Window* window_;
   Display display_;
 
-  int mouse_x_;
-  int mouse_y_;
+  // int mouse_x_;
+  // int mouse_y_;
+  Point mouse_point_;
 
   Config config_;
 };

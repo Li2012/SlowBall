@@ -56,6 +56,6 @@ map_test.o : map_test.cpp map.h $(GTEST_HEADERS)
 map_unittest : map.o map_test.o gtest_main.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
 
-SlowBall : Main.cpp game.cpp map.cpp config.cpp battle_instance.cpp unit.cpp display.cpp
+SlowBall : Main.cpp game.cpp map.cpp config.cpp battle_instance.cpp unit.cpp display.cpp util.cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
 

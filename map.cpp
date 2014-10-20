@@ -1,5 +1,8 @@
 #include "map.h"
 
+#include <fstream>
+
+#include <glog/logging.h>
 
 Location Location::GetLocation(const Direction& direction) {
   if (i == -1 or j == -1) {
@@ -60,6 +63,30 @@ Map::Map(int width, int height): w_(width), h_(height) {
     }
     tiles_.push_back(row);
   }
+}
+
+Map::Map(std::string map_file) {
+  ReadMapFromFile(map_file);
+}
+
+void Map::ReadMapFromStream(std::istream& in) {
+  in >> w_ >> h_;
+  CHECK(w_ > 0); CHECK(h_ > 0);
+
+  for (int j = 0; j < h_; j++) {
+    std::vector<Tile> row(w_);
+    for (int i = 0; i < w_; i++) {
+      Tile t;
+      in >> t.terrain;
+      row[i] = t;
+    }
+    tiles_.push_back(row);
+  }
+}
+void Map::ReadMapFromFile(std::string map_file) {
+  CHECK(map_file != "");
+  std::ifstream fin(map_file);
+  ReadMapFromStream(fin);
 }
 
 Tile Map::GetTile(Location location) const {

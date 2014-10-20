@@ -1,6 +1,5 @@
 #include "game.h"
 
-// #include <SDL2/SDL_image.h>
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 
@@ -9,9 +8,7 @@
 DEFINE_int32(window_width, 800, "window width");
 DEFINE_int32(window_height, 600, "window height");
 
-Game::Game()
-    // : map_(0, 0)
-{
+Game::Game() : mouse_point_(0, 0) {
   CHECK((FLAGS_window_width == 800 && FLAGS_window_height == 600) ||
         (FLAGS_window_width == 1366 && FLAGS_window_height == 768))
       << "wrong window width and height";
@@ -26,7 +23,6 @@ Game::Game()
   CHECK(window_ != nullptr) << "NULL window_";
 
   display_.CreateRenderer(window_);
-
 }
 
 Game::~Game() {
@@ -38,8 +34,8 @@ int Game::RunGame() {
   SDL_Event event;
   int prev_tick = SDL_GetTicks();
   int current_tick = SDL_GetTicks();
-  mouse_x_ = 0;
-  mouse_y_ = 0;
+  mouse_point_.x = 0;
+  mouse_point_.y = 0;
 
   while (!done) {
     while (SDL_PollEvent(&event)) {
@@ -50,8 +46,8 @@ int Game::RunGame() {
 
       else if (event.type == SDL_MOUSEMOTION) {
         SDL_MouseMotionEvent mouse_motion_event = event.motion;
-        mouse_x_ = mouse_motion_event.x;
-        mouse_y_ = mouse_motion_event.y;
+        mouse_point_.x = mouse_motion_event.x;
+        mouse_point_.y = mouse_motion_event.y;
       }
 
       else if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
@@ -96,8 +92,8 @@ int Game::RunGame() {
 
 void Game::RunBattleInstance(BattleInstance* battle_instance) {
   display_.ClearBattleInstanceOffset();
-  mouse_x_ = 0;
-  mouse_y_ = 0;
+  mouse_point_.x = 0;
+  mouse_point_.y = 0;
 
   SDL_Event event;
   int prev_tick = SDL_GetTicks();
@@ -105,10 +101,11 @@ void Game::RunBattleInstance(BattleInstance* battle_instance) {
 
   Location src, dest;
 
-  display_.RenderBattleInstance(*battle_instance, &config_);
+  display_.SetBattleInstance(battle_instance);
+  display_.RenderBattleInstance(&config_);
 
   while (!battle_instance->battle_done_) {
-    display_.RenderBattleInstance(*battle_instance, &config_);
+    display_.RenderBattleInstance(&config_);
     while (SDL_PollEvent(&event)) {
       if (event.type == SDL_QUIT ) {
         LOG(INFO) << "quit event, quiting battle";
@@ -116,27 +113,24 @@ void Game::RunBattleInstance(BattleInstance* battle_instance) {
       }
       else if (event.type == SDL_MOUSEMOTION) {
         SDL_MouseMotionEvent mouse_motion_event = event.motion;
-        mouse_x_ = mouse_motion_event.x;
-        mouse_y_ = mouse_motion_event.y;
-        //Location l = display_.PointToLocation(Point(mouse_x_, mouse_y_));
-        //display_.RenderLocationInfo(l);
-        display_.UpdateMousePoint(Point(mouse_x_, mouse_y_));
-        //VLOG(2) << l;
+        mouse_point_.x = mouse_motion_event.x;
+        mouse_point_.y = mouse_motion_event.y;
+        display_.UpdateMousePoint(mouse_point_);
       }
       else if (event.type == SDL_MOUSEBUTTONDOWN) {
         SDL_MouseButtonEvent mouse_button_event = event.button;
         if (mouse_button_event.button == SDL_BUTTON_LEFT) {
-          mouse_x_ = mouse_button_event.x;
-          mouse_y_ = mouse_button_event.y;
-          src = display_.PointToLocation(Point(mouse_x_, mouse_y_));
+          mouse_point_.x = mouse_button_event.x;
+          mouse_point_.y = mouse_button_event.y;
+          src = display_.PointToLocation(mouse_point_);
         }
       }
       else if (event.type == SDL_MOUSEBUTTONUP) {
         SDL_MouseButtonEvent mouse_button_event = event.button;
         if (mouse_button_event.button == SDL_BUTTON_LEFT) {
-          mouse_x_ = mouse_button_event.x;
-          mouse_y_ = mouse_button_event.y;
-          dest = display_.PointToLocation(Point(mouse_x_, mouse_y_));
+          mouse_point_.x = mouse_button_event.x;
+          mouse_point_.y = mouse_button_event.y;
+          dest = display_.PointToLocation(mouse_point_);
           VLOG(2) << "moving from " << src << " to " << dest;
           battle_instance->MoveUnitGroup(src, dest);
         }
@@ -145,7 +139,7 @@ void Game::RunBattleInstance(BattleInstance* battle_instance) {
 
       }
     }
-    display_.UpdateBattleInstanceOffset(*battle_instance, mouse_x_, mouse_y_);
+    display_.UpdateBattleInstanceOffset(*battle_instance, mouse_point_);
     current_tick = SDL_GetTicks();
     if (current_tick - prev_tick > 5) {
        LOG(INFO) << "in while loop before delay and prev tick is "
@@ -153,6 +147,7 @@ void Game::RunBattleInstance(BattleInstance* battle_instance) {
                  << " and diff is " << current_tick - prev_tick;
     }
     int delay = kDelayBase - (current_tick - prev_tick);
+    VLOG(1) << "delay for: " << delay << " ms";
     if (delay > 0) {
       SDL_Delay(delay);
     }
@@ -161,4 +156,3 @@ void Game::RunBattleInstance(BattleInstance* battle_instance) {
 
   return;
 }
-

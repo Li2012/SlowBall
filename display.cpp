@@ -7,18 +7,19 @@
 #include "battle_instance.h"
 #include "config.h"
 #include "game.h"
+#include "util.h"
 
 DECLARE_int32(window_width);
 DECLARE_int32(window_height);
 
 Display::Display() : mouse_point_(0, 0) {
   CHECK(TTF_Init() == 0);
-  //  font_ = TTF_OpenFont("hkr.ttf", 16);
-  // font_ = TTF_OpenFont("Grundschrift-Normal.otf", 16);
-  font_ = TTF_OpenFont("Bretan.otf", 16);
+  //font_ = TTF_OpenFont("Bretan.otf", 16);
+  font_ = TTF_OpenFont("DejaVuSans.ttf", 16);
   CHECK(font_ != nullptr);
 
   renderer_ = nullptr;
+  battle_instance_ = nullptr;
 
   main_rect_.x = 0;
   main_rect_.y = kTopInfoHeight;
@@ -60,8 +61,6 @@ void Display::CreateRenderer(SDL_Window* window) {
   CHECK(renderer_ != nullptr) << "NULL renderer_";
 
   SDL_SetRenderDrawColor(renderer_, 0xff, 0xff, 0xff, 0xff);
-  SDL_RenderClear(renderer_);
-  SDL_RenderPresent(renderer_);
 }
 
 void Display::Render() {
@@ -72,9 +71,18 @@ void Display::RenderClear() {
   SDL_RenderClear(renderer_);
 }
 
-void Display::RenderBattleInstance(const BattleInstance& battle_instance, Config* config) {
-  PrepareRendererForMap(battle_instance.map_, config);
-  for (const UnitGroup& unit_group : battle_instance.unit_groups_vector_) {
+void Display::SetBattleInstance(BattleInstance* battle_instance) {
+  battle_instance_ = battle_instance;
+}
+
+void Display::ClearBattleInstance() {
+  battle_instance_ = nullptr;
+}
+
+void Display::RenderBattleInstance(Config* config) {
+  CHECK(battle_instance_ != nullptr);
+  PrepareRendererForMap(battle_instance_->map_, config);
+  for (const UnitGroup& unit_group : battle_instance_->unit_groups_vector_) {
     PrepareRendererForUnitGroup(unit_group, config);
   }
   PrepareRendererForInfo();
@@ -213,30 +221,45 @@ void Display::PrepareRendererForText(std::string text, SDL_Rect dest_port, int x
 
 void Display::PrepareRendererForLocationInfo(Location location) {
   PrepareRendererForText(location.DebugString(), right_info_rect_, 5, 50, text_color_);
+
+  // Unit info. if the location is occupied by some unit.
+  if (battle_instance_->location_to_index_map_.find(location) ==
+      battle_instance_->location_to_index_map_.end()) {
+    return;
+  }
+  const int unit_index = battle_instance_->location_to_index_map_[location];
+  const UnitGroup& unit_group = battle_instance_->unit_groups_vector_[unit_index];
+  PrepareRendererForText("num:" + SimpleIntToString(unit_group.num_),
+                         right_info_rect_, 5, 70, text_color_);
+  PrepareRendererForText("unit_name:" + unit_group.unit_.unit_name_,
+                         right_info_rect_, 5, 90, text_color_);
+  PrepareRendererForText("hp:" + SimpleIntToString(unit_group.unit_.current_hp_)
+                         + "/" + SimpleIntToString(unit_group.unit_.max_hp_),
+                         right_info_rect_, 5, 110, text_color_);
 }
 
-void Display::UpdateMousePoint(Point mouse_point) {
+void Display::UpdateMousePoint(const Point mouse_point) {
   mouse_point_ = mouse_point;
 }
 
 void Display::UpdateBattleInstanceOffset(const BattleInstance& battle_instance,
-                                         const int mouse_x, const int mouse_y) {
+                                         const Point mouse_point) {
   const Map& map = battle_instance.map_;
   int battle_instance_x_offset_inc = 0;
   int battle_instance_y_offset_inc = 0;
-  if (mouse_x > FLAGS_window_width - scrolling_margin &&
+  if (mouse_point.x > FLAGS_window_width - scrolling_margin &&
       battle_instance_x_offset_ > FLAGS_window_width - kRightInfoWidth - (map.get_w() + 1) * 72) {
     battle_instance_x_offset_inc = -1;
   }
-  if (mouse_y > FLAGS_window_height - scrolling_margin &&
+  if (mouse_point.y > FLAGS_window_height - scrolling_margin &&
       battle_instance_y_offset_ > FLAGS_window_height - kBottomInfoHeight - kTopInfoHeight
       - (map.get_h() + 1) * 72 * 3 / 4) {
     battle_instance_y_offset_inc = -1;
   }
-  if (mouse_x < scrolling_margin && battle_instance_x_offset_ < 0) {
+  if (mouse_point.x < scrolling_margin && battle_instance_x_offset_ < 0) {
     battle_instance_x_offset_inc = 1;
   }
-  if (mouse_y < scrolling_margin && battle_instance_y_offset_ < 0) {
+  if (mouse_point.y < scrolling_margin && battle_instance_y_offset_ < 0) {
     battle_instance_y_offset_inc = 1;
   }
 
